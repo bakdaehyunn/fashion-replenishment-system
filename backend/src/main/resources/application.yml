@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/replenishment}
+    username: ${DB_USER:replenishment}
+    password: ${DB_PASSWORD:replenishment}
+server:
+  port: 8080

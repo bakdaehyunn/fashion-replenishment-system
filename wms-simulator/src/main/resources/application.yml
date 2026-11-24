@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: wms-simulator
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/wms_simulator}
+    username: ${DB_USER:wms_simulator}
+    password: ${DB_PASSWORD:wms_simulator}
+server:
+  port: 8081

@@ -1,0 +1,75 @@
+services:
+  backend-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: replenishment
+      POSTGRES_USER: replenishment
+      POSTGRES_PASSWORD: replenishment
+    volumes:
+      - backend-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "replenishment", "-d", "replenishment"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  backend:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        MODULE: backend
+    environment:
+      DB_URL: jdbc:postgresql://backend-db:5432/replenishment
+      WMS_RUN_ID: ${WMS_RUN_ID:-normal-local}
+      WMS_URL: http://wms-simulator:8081
+      WMS_TOKEN: ${WMS_TOKEN:-local-compose-wms}
+      DB_USER: replenishment
+      DB_PASSWORD: replenishment
+    depends_on:
+      backend-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-8080}:8080"
+  wms-simulator-db:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: wms_simulator
+      POSTGRES_USER: wms_simulator
+      POSTGRES_PASSWORD: wms_simulator
+    volumes:
+      - wms-simulator-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "wms_simulator", "-d", "wms_simulator"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+  wms-simulator:
+    build:
+      context: .
+      dockerfile: infra/Dockerfile
+      args:
+        MODULE: wms-simulator
+    environment:
+      DB_URL: jdbc:postgresql://wms-simulator-db:5432/wms_simulator
+      WMS_SHIP_FIRST_RUN_ID: ${WMS_SHIP_FIRST_RUN_ID:-}
+      WMS_TIMEOUT_RUN_ID: ${WMS_TIMEOUT_RUN_ID:-}
+      WMS_CALLBACK_URL: http://backend:8080/internal/wms/events
+      WMS_TOKEN: ${WMS_TOKEN:-local-compose-wms}
+      DB_USER: wms_simulator
+      DB_PASSWORD: wms_simulator
+    depends_on:
+      wms-simulator-db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${WMS_HOST_PORT:-8081}:8081"
+  frontend:
+    build: ./frontend
+    environment:
+      API_TARGET: http://backend:8080
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:${FRONTEND_HOST_PORT:-5173}:5173"
+volumes:
+  backend-data:
+  wms-simulator-data:

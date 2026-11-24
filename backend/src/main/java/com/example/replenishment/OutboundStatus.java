@@ -1,0 +1,5 @@
+package com.example.replenishment;
+
+enum OutboundStatus {
+    DISPATCH_PENDING, ACCEPTANCE_UNKNOWN, ACCEPTED, WORKING, PICKING_EXCEPTION, READY_TO_SHIP, SHIPPED, CANCELLED
+}
